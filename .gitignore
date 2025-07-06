@@ -1,0 +1,23 @@
+# Environment
+.env
+
+# Dependency directories
+node_modules/
+app/vendor/
+
+# Laravel runtime
+app/storage/
+app/bootstrap/cache/
+
+# Docker volumes & sockets
+docker/data/
+*.sock
+
+# Logs
+*.log
+
+# IDE / OS metadata
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db 
