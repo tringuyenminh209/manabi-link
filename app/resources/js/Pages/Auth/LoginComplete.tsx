@@ -1,17 +1,16 @@
 'use client';
 
 import { CheckCircle, Mail, ArrowRight, Home, BookOpen, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { router } from '@inertiajs/react';
+import { t } from '@/lib/i18n';
 
 export default function RegisterCompletePage() {
-    const router = useRouter();
-
     const handleGoToLogin = () => {
-        router.push('/login');
+        router.visit('/login');
     };
 
     const handleGoHome = () => {
-        router.push('/');
+        router.visit('/');
     };
 
     return (

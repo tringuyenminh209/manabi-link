@@ -1,5 +1,13 @@
 {
     "compilerOptions": {
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "allowImportingTsExtensions": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
         "baseUrl": ".",
         "jsx": "react-jsx",
         "allowJs": true,

@@ -36,3 +36,8 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Fallback route cho React SPA
+Route::get('/{any}', function () {
+    return view('app'); // Đảm bảo file resources/views/app.blade.php tồn tại
+})->where('any', '.*');

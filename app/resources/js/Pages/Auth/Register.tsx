@@ -2,11 +2,40 @@
 
 import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, Phone, Calendar, MapPin } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { t } from '@/lib/i18n';
+import { Link } from 'react-router-dom';
+
+// Định nghĩa interface cho form data
+interface FormData {
+    fullName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    location: string;
+    password: string;
+    confirmPassword: string;
+    userType: 'learner' | 'teacher';
+    agreeToTerms: boolean;
+    subscribeNewsletter: boolean;
+}
+
+// Định nghĩa interface cho errors
+interface FormErrors {
+    fullName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    agreeToTerms?: string;
+    [key: string]: string | undefined;
+}
 
 export default function RegisterPage() {
+    const { register, error: authError, loading } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [formData, setFormData] = useState({
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [formData, setFormData] = useState<FormData>({
         fullName: '',
         email: '',
         phone: '',
@@ -25,20 +54,85 @@ export default function RegisterPage() {
             ...prev,
             [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
         }));
+
+        // Clear field error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: undefined }));
+        }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const validateForm = () => {
+        const newErrors: FormErrors = {};
+
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = 'Họ và tên là bắt buộc';
+        }
+
+        if (!formData.email) {
+            newErrors.email = 'Email là bắt buộc';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Email không hợp lệ';
+        }
+
+        if (!formData.password) {
+            newErrors.password = 'Mật khẩu là bắt buộc';
+        } else if (formData.password.length < 8) {
+            newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+        }
+
+        if (!formData.agreeToTerms) {
+            newErrors.agreeToTerms = 'Bạn phải đồng ý với điều khoản sử dụng';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle registration logic here
-        console.log('Registration attempt:', formData);
+
+        if (!validateForm()) return;
+
+        try {
+            const userData = {
+                name: formData.fullName,
+                email: formData.email,
+                phone: formData.phone,
+                date_of_birth: formData.dateOfBirth,
+                location: formData.location,
+                password: formData.password,
+                password_confirmation: formData.confirmPassword,
+                role: formData.userType,
+                subscribe_newsletter: formData.subscribeNewsletter,
+            };
+
+            await register(userData);
+            // Redirect sẽ được xử lý trong useAuth hook
+        } catch (error) {
+            // Error đã được xử lý trong useAuth
+        }
     };
 
     return (
-        <div className="min-h-screen bg-off-white flex" data-oid="ao6z9um">
+        <div className="min-h-screen bg-off-white flex relative">
+            {/* Home Button - Top Left */}
+            <Link
+                to="/"
+                className="absolute top-6 left-6 z-10 flex items-center space-x-2 text-wisdom-blue hover:text-wisdom-blue/80 transition-colors"
+            >
+                <div className="w-8 h-8 bg-wisdom-blue rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">ML</span>
+                </div>
+                <span className="font-semibold text-charcoal-gray">Manabi Link</span>
+            </Link>
+
             {/* Left side - Illustration/Image */}
             <div
                 className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-wisdom-blue to-wisdom-blue/80 items-center justify-center p-12"
-                data-oid="g1_dw6:"
             >
                 <div className="text-center text-white max-w-md" data-oid="ymz.3pk">
                     <div className="mb-8" data-oid="ad9kd0k">
@@ -60,11 +154,10 @@ export default function RegisterPage() {
                         </div>
                     </div>
                     <h2 className="text-3xl font-bold mb-4 font-inter" data-oid="acm33xx">
-                        Tham gia cộng đồng Manabi Link
+                        {t('register_page.join_community')}
                     </h2>
                     <p className="text-lg opacity-90 leading-relaxed mb-6" data-oid="_lhm7hh">
-                        Khám phá thế giới tri thức mới, kết nối với những người thầy tuyệt vời và
-                        bắt đầu hành trình học tập của bạn ngay hôm nay.
+                        {t('register_page.join_desc')}
                     </p>
                     <div className="space-y-3 text-left" data-oid="ole_-v-">
                         <div className="flex items-center space-x-3" data-oid="jom1dli">
@@ -80,7 +173,7 @@ export default function RegisterPage() {
                                 </span>
                             </div>
                             <span className="text-sm" data-oid="06u8mu1">
-                                Truy cập hàng nghìn khóa học chất lượng
+                                {t('register_page.feature_courses')}
                             </span>
                         </div>
                         <div className="flex items-center space-x-3" data-oid="fikno:c">
@@ -96,7 +189,7 @@ export default function RegisterPage() {
                                 </span>
                             </div>
                             <span className="text-sm" data-oid="h1ftmy7">
-                                Kết nối với giáo viên chuyên nghiệp
+                                {t('register_page.feature_teachers')}
                             </span>
                         </div>
                         <div className="flex items-center space-x-3" data-oid="h:eb8pc">
@@ -112,7 +205,7 @@ export default function RegisterPage() {
                                 </span>
                             </div>
                             <span className="text-sm" data-oid="17hv_y-">
-                                Học tập linh hoạt theo lịch trình riêng
+                                {t('register_page.feature_flexible')}
                             </span>
                         </div>
                     </div>
@@ -150,12 +243,19 @@ export default function RegisterPage() {
                                 className="text-3xl font-bold text-charcoal-gray mb-2 font-inter"
                                 data-oid="c277ew7"
                             >
-                                Đăng ký tài khoản
+                                {t('register_page.register_title')}
                             </h1>
                             <p className="text-silver-gray" data-oid="qtibqxu">
-                                Tạo tài khoản mới để bắt đầu hành trình học tập cùng Manabi Link
+                                {t('register_page.register_desc')}
                             </p>
                         </div>
+
+                        {/* Error Message */}
+                        {authError && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-sm text-red-600">{authError}</p>
+                            </div>
+                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-6" data-oid="5kivr5q">
                             {/* User Type Selection */}
@@ -164,7 +264,7 @@ export default function RegisterPage() {
                                     className="block text-sm font-medium text-charcoal-gray mb-3"
                                     data-oid="07qhwxy"
                                 >
-                                    Bạn muốn tham gia với vai trò gì?
+                                    {t('register_page.role_question')}
                                 </label>
                                 <div className="grid grid-cols-2 gap-3" data-oid="4iw_f7c">
                                     <label
@@ -187,7 +287,7 @@ export default function RegisterPage() {
 
                                         <User className="w-5 h-5 mr-2" data-oid="mzpq:4w" />
                                         <span className="font-medium" data-oid=".e2p.:m">
-                                            Học viên
+                                            {t('register_page.role_learner')}
                                         </span>
                                     </label>
                                     <label
@@ -210,7 +310,7 @@ export default function RegisterPage() {
 
                                         <User className="w-5 h-5 mr-2" data-oid="dl6mah9" />
                                         <span className="font-medium" data-oid="3cbu88:">
-                                            Giáo viên
+                                            {t('register_page.role_teacher')}
                                         </span>
                                     </label>
                                 </div>
@@ -223,7 +323,7 @@ export default function RegisterPage() {
                                     className="block text-sm font-medium text-charcoal-gray mb-2"
                                     data-oid="detg4zv"
                                 >
-                                    Họ và tên *
+                                    {t('register_page.full_name')}
                                 </label>
                                 <div className="relative" data-oid="v4pi5xn">
                                     <User
@@ -237,12 +337,15 @@ export default function RegisterPage() {
                                         type="text"
                                         value={formData.fullName}
                                         onChange={handleInputChange}
-                                        className="manabi-input pl-12"
-                                        placeholder="Nhập họ và tên đầy đủ"
+                                        className={`manabi-input pl-12 ${errors.fullName ? 'border-red-500' : ''}`}
+                                        placeholder={t('register_page.full_name_placeholder')}
                                         required
                                         data-oid="vswr.d7"
                                     />
                                 </div>
+                                {errors.fullName && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
+                                )}
                             </div>
 
                             {/* Email Field */}
@@ -252,7 +355,7 @@ export default function RegisterPage() {
                                     className="block text-sm font-medium text-charcoal-gray mb-2"
                                     data-oid="r93j_tb"
                                 >
-                                    Email *
+                                    {t('register_page.email')}
                                 </label>
                                 <div className="relative" data-oid="bom78b_">
                                     <Mail
@@ -266,12 +369,15 @@ export default function RegisterPage() {
                                         type="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        className="manabi-input pl-12"
-                                        placeholder="Nhập địa chỉ email"
+                                        className={`manabi-input pl-12 ${errors.email ? 'border-red-500' : ''}`}
+                                        placeholder={t('register_page.email_placeholder')}
                                         required
                                         data-oid="29oc4e1"
                                     />
                                 </div>
+                                {errors.email && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                                )}
                             </div>
 
                             {/* Phone and Date of Birth Row */}
@@ -285,7 +391,7 @@ export default function RegisterPage() {
                                         className="block text-sm font-medium text-charcoal-gray mb-2"
                                         data-oid="ve0qgtp"
                                     >
-                                        Số điện thoại
+                                        {t('register_page.phone')}
                                     </label>
                                     <div className="relative" data-oid="-qysswr">
                                         <Phone
@@ -300,7 +406,7 @@ export default function RegisterPage() {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             className="manabi-input pl-12"
-                                            placeholder="0123456789"
+                                            placeholder={t('register_page.phone_placeholder')}
                                             data-oid="_66b.-6"
                                         />
                                     </div>
@@ -311,7 +417,7 @@ export default function RegisterPage() {
                                         className="block text-sm font-medium text-charcoal-gray mb-2"
                                         data-oid="0dhneyp"
                                     >
-                                        Ngày sinh
+                                        {t('register_page.dob')}
                                     </label>
                                     <div className="relative" data-oid="ds:w.l8">
                                         <Calendar
@@ -339,7 +445,7 @@ export default function RegisterPage() {
                                     className="block text-sm font-medium text-charcoal-gray mb-2"
                                     data-oid="_p_sia1"
                                 >
-                                    Địa điểm
+                                    {t('register_page.location')}
                                 </label>
                                 <div className="relative" data-oid="i4cji85">
                                     <MapPin
@@ -356,25 +462,25 @@ export default function RegisterPage() {
                                         data-oid="q0pbo0d"
                                     >
                                         <option value="" data-oid="p4n8ve9">
-                                            Chọn tỉnh/thành phố
+                                            {t('register_page.location_placeholder')}
                                         </option>
                                         <option value="hanoi" data-oid="y:sr4vz">
-                                            Hà Nội
+                                            {t('register_page.location_hanoi')}
                                         </option>
                                         <option value="hcm" data-oid=":ec3:n5">
-                                            TP. Hồ Chí Minh
+                                            {t('register_page.location_hcm')}
                                         </option>
                                         <option value="danang" data-oid="mm:iw0t">
-                                            Đà Nẵng
+                                            {t('register_page.location_danang')}
                                         </option>
                                         <option value="haiphong" data-oid="246awwt">
-                                            Hải Phòng
+                                            {t('register_page.location_haiphong')}
                                         </option>
                                         <option value="cantho" data-oid="zq-ow-i">
-                                            Cần Thơ
+                                            {t('register_page.location_cantho')}
                                         </option>
                                         <option value="other" data-oid="wox0oia">
-                                            Khác
+                                            {t('register_page.location_other')}
                                         </option>
                                     </select>
                                 </div>
@@ -391,7 +497,7 @@ export default function RegisterPage() {
                                         className="block text-sm font-medium text-charcoal-gray mb-2"
                                         data-oid="5zp2_br"
                                     >
-                                        Mật khẩu *
+                                        {t('register_page.password')}
                                     </label>
                                     <div className="relative" data-oid="h.feb7o">
                                         <Lock
@@ -405,8 +511,8 @@ export default function RegisterPage() {
                                             type={showPassword ? 'text' : 'password'}
                                             value={formData.password}
                                             onChange={handleInputChange}
-                                            className="manabi-input pl-12 pr-12"
-                                            placeholder="Tối thiểu 8 ký tự"
+                                            className={`manabi-input pl-12 pr-12 ${errors.password ? 'border-red-500' : ''}`}
+                                            placeholder={t('register_page.password_placeholder')}
                                             required
                                             data-oid="0uv_oh3"
                                         />
@@ -424,6 +530,9 @@ export default function RegisterPage() {
                                             )}
                                         </button>
                                     </div>
+                                    {errors.password && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                                    )}
                                 </div>
                                 <div data-oid="8bsz1d3">
                                     <label
@@ -431,7 +540,7 @@ export default function RegisterPage() {
                                         className="block text-sm font-medium text-charcoal-gray mb-2"
                                         data-oid="gpmf-_n"
                                     >
-                                        Xác nhận mật khẩu *
+                                        {t('register_page.confirm_password')}
                                     </label>
                                     <div className="relative" data-oid="jt_y0yi">
                                         <Lock
@@ -445,8 +554,8 @@ export default function RegisterPage() {
                                             type={showConfirmPassword ? 'text' : 'password'}
                                             value={formData.confirmPassword}
                                             onChange={handleInputChange}
-                                            className="manabi-input pl-12 pr-12"
-                                            placeholder="Nhập lại mật khẩu"
+                                            className={`manabi-input pl-12 pr-12 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                                            placeholder={t('register_page.confirm_password_placeholder')}
                                             required
                                             data-oid="u4zqipb"
                                         />
@@ -466,6 +575,9 @@ export default function RegisterPage() {
                                             )}
                                         </button>
                                     </div>
+                                    {errors.confirmPassword && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -483,25 +595,12 @@ export default function RegisterPage() {
                                     />
 
                                     <span className="text-sm text-charcoal-gray" data-oid="ac460sx">
-                                        Tôi đồng ý với{' '}
-                                        <a
-                                            href="#"
-                                            className="text-wisdom-blue hover:text-wisdom-blue/80 font-medium"
-                                            data-oid="ccktuys"
-                                        >
-                                            Điều khoản sử dụng
-                                        </a>{' '}
-                                        và{' '}
-                                        <a
-                                            href="#"
-                                            className="text-wisdom-blue hover:text-wisdom-blue/80 font-medium"
-                                            data-oid="zp1t_zo"
-                                        >
-                                            Chính sách bảo mật
-                                        </a>{' '}
-                                        của Manabi Link *
+                                        {t('register_page.agree_terms', { terms: t('register_page.terms'), policy: t('register_page.policy') })}
                                     </span>
                                 </label>
+                                {errors.agreeToTerms && (
+                                    <p className="text-sm text-red-600">{errors.agreeToTerms}</p>
+                                )}
                                 <label className="flex items-start space-x-3" data-oid="iczn-qw">
                                     <input
                                         type="checkbox"
@@ -513,8 +612,7 @@ export default function RegisterPage() {
                                     />
 
                                     <span className="text-sm text-charcoal-gray" data-oid="1k1gssg">
-                                        Tôi muốn nhận thông tin về các khóa học mới và ưu đãi đặc
-                                        biệt
+                                        {t('register_page.subscribe_newsletter')}
                                     </span>
                                 </label>
                             </div>
@@ -523,10 +621,10 @@ export default function RegisterPage() {
                             <button
                                 type="submit"
                                 className="manabi-btn-primary w-full text-lg"
-                                disabled={!formData.agreeToTerms}
+                                disabled={!formData.agreeToTerms || loading}
                                 data-oid="egdyfzz"
                             >
-                                Tạo tài khoản
+                                {loading ? t('register_page.registering') : t('register_page.register_btn')}
                             </button>
                         </form>
 
@@ -540,7 +638,7 @@ export default function RegisterPage() {
                                 className="px-4 text-sm text-silver-gray bg-white"
                                 data-oid="bvq1xwg"
                             >
-                                hoặc
+                                {t('register_page.or')}
                             </span>
                             <div
                                 className="flex-1 border-t border-light-border"
@@ -583,7 +681,7 @@ export default function RegisterPage() {
                                         data-oid="zd93o:e"
                                     />
                                 </svg>
-                                Đăng ký với Google
+                                {t('register_page.register_google')}
                             </button>
 
                             <button
@@ -601,21 +699,20 @@ export default function RegisterPage() {
                                         data-oid="v.3q550"
                                     />
                                 </svg>
-                                Đăng ký với Facebook
+                                {t('register_page.register_facebook')}
                             </button>
                         </div>
 
                         {/* Login Link */}
-                        <div className="mt-8 text-center" data-oid="ap.a.38">
-                            <p className="text-charcoal-gray" data-oid="6yxa9vc">
-                                Đã có tài khoản?{' '}
-                                <a
-                                    href="/login"
+                        <div className="mt-8 text-center">
+                            <p className="text-charcoal-gray">
+                                {t('register_page.already_have_account')}{' '}
+                                <Link
+                                    to="/login"
                                     className="text-wisdom-blue font-medium hover:text-wisdom-blue/80 transition-colors"
-                                    data-oid=":ep2f4t"
                                 >
-                                    Đăng nhập tại đây
-                                </a>
+                                    {t('register_page.login_here')}
+                                </Link>
                             </p>
                         </div>
                     </div>

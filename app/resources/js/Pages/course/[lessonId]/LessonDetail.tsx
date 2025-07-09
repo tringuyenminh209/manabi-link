@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Star,
@@ -19,66 +19,53 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { lessonsAPI } from '@/api/lessons';
+import { bookingsAPI } from '@/api/bookings';
+import { useFetch, useMutation } from '@/hooks/useFetch';
+import { useAuth } from '@/hooks/useAuth';
 
-// --- Interfaces and Dummy Data ---
-const lessonDetail = {
-    id: '1',
-    title: 'Guitar đệm hát nâng cao - Kỹ thuật và Cảm âm',
-    category: 'Âm nhạc',
-    rating: 4.8,
-    reviewCount: 152,
-    studentCount: 345,
-    coverImage: 'https://images.unsplash.com/photo-1598528738936-c5cf9e17b847?w=800&h=450&fit=crop',
-    introVideo: 'https://example.com/intro.mp4',
+// --- Interfaces ---
+interface LessonDetail {
+    id: string;
+    title: string;
+    category: string;
+    rating: number;
+    reviewCount: number;
+    studentCount: number;
+    coverImage: string;
+    introVideo: string;
     teacher: {
-        id: 'sensei-1',
-        name: 'Nguyễn Văn Minh',
-        avatar: '/api/placeholder/80/80?name=M',
-        title: 'Nghệ sĩ Guitar & Nhà sản xuất âm nhạc',
-        stats: { rating: 4.9, reviews: 320, students: '1.2k' },
-    },
-    description:
-        'Khóa học này sẽ đưa bạn đi sâu vào các kỹ thuật đệm hát phức tạp, cách xây dựng hợp âm màu sắc và luyện tập khả năng cảm âm để bạn có thể tự tin chơi bất kỳ bài hát nào.',
-    whatYoullLearn: [
-        'Quy tắc hòa âm và cách áp dụng vào đệm hát.',
-        'Các kỹ thuật nâng cao: fingerstyle, tapping, slapping.',
-        'Tự xây dựng intro, gian tấu và outro cho bài hát.',
-        'Luyện tai nghe và xác định hợp âm của một bài hát bất kỳ.',
-    ],
-
-    price: 799000,
-    originalPrice: 1200000,
-    duration: '12 giờ',
-    level: 'Nâng cao',
-    lessonCount: 24,
-    language: 'Tiếng Việt',
-    availableSchedules: [
-        { id: 'sch_1', datetime: '2025-07-10T19:00:00', remainingSlots: 3 },
-        { id: 'sch_2', datetime: '2025-07-12T20:00:00', remainingSlots: 1 },
-        { id: 'sch_3', datetime: '2025-07-15T18:00:00', remainingSlots: 5 },
-    ],
-
-    reviews: [
-        {
-            id: 1,
-            user: 'Trần Văn Hùng',
-            rating: 5,
-            comment:
-                'Khóa học cực kỳ chất lượng. Thầy Minh dạy rất có tâm và kiến thức sâu rộng. Mình đã tiến bộ vượt bậc!',
-            avatar: '/api/placeholder/48/48?name=H',
-        },
-        {
-            id: 2,
-            user: 'Lê Thị Mai',
-            rating: 4,
-            comment: 'Nội dung rất hay nhưng hơi khó với mình. Cần có nền tảng vững trước khi học.',
-            avatar: '/api/placeholder/48/48?name=M',
-        },
-    ],
-};
+        id: string;
+        name: string;
+        avatar: string;
+        title: string;
+        stats: { rating: number; reviews: number; students: string };
+    };
+    description: string;
+    whatYoullLearn: string[];
+    price: number;
+    originalPrice: number;
+    duration: string;
+    level: string;
+    lessonCount: number;
+    language: string;
+    availableSchedules: Array<{
+        id: string;
+        datetime: string;
+        remainingSlots: number;
+    }>;
+    reviews: Array<{
+        id: number;
+        user: string;
+        rating: number;
+        comment: string;
+        avatar: string;
+    }>;
+}
 
 const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
 const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('vi-VN', {
         weekday: 'long',
@@ -90,14 +77,152 @@ const formatDate = (dateString: string) =>
     });
 
 // --- Main Component ---
-const LessonDetailPage = () => {
+const LessonDetailPage = ({ lessonId }: { lessonId: string }) => {
+    const { user, isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState<'about' | 'content' | 'reviews'>('about');
     const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null);
+
+    // Fetch lesson details
+    const { data: lessonDetail, loading: lessonLoading, error: lessonError } = useFetch(
+        () => lessonsAPI.getLesson(lessonId),
+        [lessonId]
+    );
+
+    // Fetch lesson schedules
+    const { data: schedules, loading: schedulesLoading } = useFetch(
+        () => lessonsAPI.getLessonSchedules(lessonId),
+        [lessonId]
+    );
+
+    // Fetch lesson reviews
+    const { data: reviews, loading: reviewsLoading } = useFetch(
+        () => lessonsAPI.getLessonReviews(lessonId),
+        [lessonId]
+    );
+
+    // Booking mutation
+    const { mutate: createBooking, loading: bookingLoading } = useMutation(
+        (bookingData) => bookingsAPI.createBooking(bookingData)
+    );
 
     const handleCopyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         // You can add a toast notification here
     };
+
+    const handleBooking = async () => {
+        if (!selectedSchedule) {
+            alert('Vui lòng chọn lịch học');
+            return;
+        }
+
+        if (!isAuthenticated) {
+            alert('Vui lòng đăng nhập để đặt lịch');
+            return;
+        }
+
+        try {
+            await createBooking({
+                lesson_id: lessonId,
+                schedule_id: selectedSchedule,
+            });
+            alert('Đặt lịch thành công!');
+        } catch (error) {
+            alert('Có lỗi xảy ra khi đặt lịch');
+        }
+    };
+
+    if (lessonLoading) {
+        return (
+            <div className="min-h-screen bg-off-white flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wisdom-blue mx-auto"></div>
+                    <p className="mt-4 text-charcoal-gray">Đang tải thông tin khóa học...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (lessonError) {
+        return (
+            <div className="min-h-screen bg-off-white flex items-center justify-center">
+                <div className="text-center">
+                    <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-charcoal-gray mb-2">
+                        Không tìm thấy khóa học
+                    </h2>
+                    <p className="text-silver-gray mb-4">
+                        Khóa học bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
+                    </p>
+                    <Link
+                        href="/course"
+                        className="bg-wisdom-blue text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Quay lại danh sách khóa học
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // Fallback data nếu API chưa sẵn sàng
+    const fallbackLesson: LessonDetail = {
+        id: '1',
+        title: 'Guitar đệm hát nâng cao - Kỹ thuật và Cảm âm',
+        category: 'Âm nhạc',
+        rating: 4.8,
+        reviewCount: 152,
+        studentCount: 345,
+        coverImage: 'https://images.unsplash.com/photo-1598528738936-c5cf9e17b847?w=800&h=450&fit=crop',
+        introVideo: 'https://example.com/intro.mp4',
+        teacher: {
+            id: 'sensei-1',
+            name: 'Nguyễn Văn Minh',
+            avatar: '/api/placeholder/80/80?name=M',
+            title: 'Nghệ sĩ Guitar & Nhà sản xuất âm nhạc',
+            stats: { rating: 4.9, reviews: 320, students: '1.2k' },
+        },
+        description:
+            'Khóa học này sẽ đưa bạn đi sâu vào các kỹ thuật đệm hát phức tạp, cách xây dựng hợp âm màu sắc và luyện tập khả năng cảm âm để bạn có thể tự tin chơi bất kỳ bài hát nào.',
+        whatYoullLearn: [
+            'Quy tắc hòa âm và cách áp dụng vào đệm hát.',
+            'Các kỹ thuật nâng cao: fingerstyle, tapping, slapping.',
+            'Tự xây dựng intro, gian tấu và outro cho bài hát.',
+            'Luyện tai nghe và xác định hợp âm của một bài hát bất kỳ.',
+        ],
+        price: 799000,
+        originalPrice: 1200000,
+        duration: '12 giờ',
+        level: 'Nâng cao',
+        lessonCount: 24,
+        language: 'Tiếng Việt',
+        availableSchedules: [
+            { id: 'sch_1', datetime: '2025-07-10T19:00:00', remainingSlots: 3 },
+            { id: 'sch_2', datetime: '2025-07-12T20:00:00', remainingSlots: 1 },
+            { id: 'sch_3', datetime: '2025-07-15T18:00:00', remainingSlots: 5 },
+        ],
+        reviews: [
+            {
+                id: 1,
+                user: 'Trần Văn Hùng',
+                rating: 5,
+                comment:
+                    'Khóa học cực kỳ chất lượng. Thầy Minh dạy rất có tâm và kiến thức sâu rộng. Mình đã tiến bộ vượt bậc!',
+                avatar: '/api/placeholder/48/48?name=H',
+            },
+            {
+                id: 2,
+                user: 'Lê Thị Mai',
+                rating: 4,
+                comment: 'Nội dung rất hay nhưng hơi khó với mình. Cần có nền tảng vững trước khi học.',
+                avatar: '/api/placeholder/48/48?name=M',
+            },
+        ],
+    };
+
+    const lesson = lessonDetail || fallbackLesson;
+    const lessonSchedules = schedules || lesson.availableSchedules;
+    const lessonReviews = reviews || lesson.reviews;
 
     return (
         <div className="bg-off-white font-inter" data-oid="o0zph9o">
@@ -145,11 +270,11 @@ const LessonDetailPage = () => {
                                     /
                                 </span>
                                 <span className="text-charcoal-gray" data-oid="fqo_l73">
-                                    {lessonDetail.category}
+                                    {lesson.category}
                                 </span>
                             </nav>
                             <h1 className="manabi-heading-1" data-oid="gkrgka0">
-                                {lessonDetail.title}
+                                {lesson.title}
                             </h1>
                             <div
                                 className="flex items-center gap-4 mt-3 text-sm text-silver-gray"
@@ -165,10 +290,10 @@ const LessonDetailPage = () => {
                                         className="font-semibold text-charcoal-gray"
                                         data-oid="ee93opv"
                                     >
-                                        {lessonDetail.rating}
+                                        {lesson.rating}
                                     </span>
                                     <span data-oid="3behz:f">
-                                        ({lessonDetail.reviewCount} đánh giá)
+                                        ({lesson.reviewCount} đánh giá)
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5" data-oid="w-fjkmq">
@@ -178,7 +303,7 @@ const LessonDetailPage = () => {
                                     />
 
                                     <span data-oid="t6h465a">
-                                        {lessonDetail.studentCount} học viên
+                                        {lesson.studentCount} học viên
                                     </span>
                                 </div>
                             </div>
@@ -190,8 +315,8 @@ const LessonDetailPage = () => {
                             data-oid="x:xvlza"
                         >
                             <img
-                                src={lessonDetail.coverImage}
-                                alt={lessonDetail.title}
+                                src={lesson.coverImage}
+                                alt={lesson.title}
                                 className="w-full h-auto object-cover"
                                 data-oid="ojteqg-"
                             />
@@ -233,7 +358,7 @@ const LessonDetailPage = () => {
                                             Mô tả khóa học
                                         </h2>
                                         <p className="manabi-text-body" data-oid="d4674t1">
-                                            {lessonDetail.description}
+                                            {lesson.description}
                                         </p>
 
                                         <h2
@@ -243,7 +368,7 @@ const LessonDetailPage = () => {
                                             Bạn sẽ học được gì?
                                         </h2>
                                         <ul className="space-y-3" data-oid="1gcn.ox">
-                                            {lessonDetail.whatYoullLearn.map((item, index) => (
+                                            {lesson.whatYoullLearn.map((item, index) => (
                                                 <li
                                                     key={index}
                                                     className="flex items-start gap-3"
@@ -275,22 +400,22 @@ const LessonDetailPage = () => {
                                             data-oid="1azfhvh"
                                         >
                                             <img
-                                                src={lessonDetail.teacher.avatar}
-                                                alt={lessonDetail.teacher.name}
+                                                src={lesson.teacher.avatar}
+                                                alt={lesson.teacher.name}
                                                 className="w-20 h-20 rounded-full object-cover"
                                                 data-oid="kihu7_s"
                                             />
 
                                             <div data-oid="jv7-5.w">
                                                 <Link
-                                                    href={`/teacher/profile/${lessonDetail.teacher.id}`}
+                                                    href={`/teacher/profile/${lesson.teacher.id}`}
                                                     className="font-bold text-wisdom-blue hover:underline"
                                                     data-oid=".nv2lyr"
                                                 >
-                                                    {lessonDetail.teacher.name}
+                                                    {lesson.teacher.name}
                                                 </Link>
                                                 <p className="manabi-text-muted" data-oid="fanjvp3">
-                                                    {lessonDetail.teacher.title}
+                                                    {lesson.teacher.title}
                                                 </p>
                                                 <div
                                                     className="flex items-center gap-4 mt-2 text-sm"
@@ -306,7 +431,7 @@ const LessonDetailPage = () => {
                                                         />
 
                                                         <span data-oid="s5-_v3f">
-                                                            {lessonDetail.teacher.stats.rating}
+                                                            {lesson.teacher.stats.rating}
                                                         </span>
                                                     </div>
                                                     <div
@@ -319,7 +444,7 @@ const LessonDetailPage = () => {
                                                         />
 
                                                         <span data-oid="vh8sdrw">
-                                                            {lessonDetail.teacher.stats.students}{' '}
+                                                            {lesson.teacher.stats.students}{' '}
                                                             học viên
                                                         </span>
                                                     </div>
@@ -333,7 +458,7 @@ const LessonDetailPage = () => {
                                         <h2 className="manabi-heading-3 mb-6" data-oid=".zs_3n_">
                                             Đánh giá từ học viên
                                         </h2>
-                                        {lessonDetail.reviews.map((review) => (
+                                        {lessonReviews.map((review) => (
                                             <div
                                                 key={review.id}
                                                 className="border-b border-light-border py-6 last:border-b-0"
@@ -397,17 +522,17 @@ const LessonDetailPage = () => {
                                 className="text-3xl font-bold text-wisdom-blue mb-2"
                                 data-oid="n-0aw93"
                             >
-                                {formatCurrency(lessonDetail.price)}
+                                {formatCurrency(lesson.price)}
                                 <span
                                     className="text-lg text-silver-gray line-through ml-2 font-normal"
                                     data-oid="o6q-hb6"
                                 >
-                                    {formatCurrency(lessonDetail.originalPrice)}
+                                    {formatCurrency(lesson.originalPrice)}
                                 </span>
                             </div>
 
                             {/* Urgency notification */}
-                            {lessonDetail.availableSchedules.some((s) => s.remainingSlots <= 2) && (
+                            {lessonSchedules.some((s) => s.remainingSlots <= 2) && (
                                 <div
                                     className="mb-4 p-3 bg-warning-red/10 border border-warning-red/20 rounded-lg"
                                     data-oid="mrk-03q"
@@ -420,7 +545,7 @@ const LessonDetailPage = () => {
                                         <span className="text-sm font-medium" data-oid="s3z4rc-">
                                             Chỉ còn{' '}
                                             {
-                                                lessonDetail.availableSchedules.find(
+                                                lessonSchedules.find(
                                                     (s) => s.remainingSlots <= 2,
                                                 )?.remainingSlots
                                             }{' '}
@@ -441,7 +566,7 @@ const LessonDetailPage = () => {
                                     className="space-y-3 max-h-60 overflow-y-auto pr-2"
                                     data-oid="3531.ni"
                                 >
-                                    {lessonDetail.availableSchedules.map((schedule) => (
+                                    {lessonSchedules.map((schedule) => (
                                         <label
                                             key={schedule.id}
                                             className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
@@ -499,11 +624,7 @@ const LessonDetailPage = () => {
                                 variant="primary"
                                 className="w-full"
                                 disabled={!selectedSchedule}
-                                onClick={() => {
-                                    if (selectedSchedule) {
-                                        window.location.href = `/booking/${selectedSchedule}`;
-                                    }
-                                }}
+                                onClick={handleBooking}
                                 data-oid="klgv4so"
                             >
                                 {selectedSchedule ? 'Đặt lịch ngay' : 'Vui lòng chọn lịch học'}
@@ -527,7 +648,7 @@ const LessonDetailPage = () => {
                                             Thời lượng:
                                         </span>
                                         <span className="font-medium" data-oid="uu89x5q">
-                                            {lessonDetail.duration}
+                                            {lesson.duration}
                                         </span>
                                     </div>
                                     <div className="flex justify-between" data-oid="fezpis9">
@@ -535,7 +656,7 @@ const LessonDetailPage = () => {
                                             Trình độ:
                                         </span>
                                         <Badge variant="info" data-oid="t-9-koq">
-                                            {lessonDetail.level}
+                                            {lesson.level}
                                         </Badge>
                                     </div>
                                     <div className="flex justify-between" data-oid="9bur760">
@@ -543,7 +664,7 @@ const LessonDetailPage = () => {
                                             Số bài học:
                                         </span>
                                         <span className="font-medium" data-oid="p9_zcl7">
-                                            {lessonDetail.lessonCount}
+                                            {lesson.lessonCount}
                                         </span>
                                     </div>
                                     <div className="flex justify-between" data-oid="46rx6jd">
@@ -551,7 +672,7 @@ const LessonDetailPage = () => {
                                             Ngôn ngữ:
                                         </span>
                                         <span className="font-medium" data-oid="fm3o627">
-                                            {lessonDetail.language}
+                                            {lesson.language}
                                         </span>
                                     </div>
                                 </div>
