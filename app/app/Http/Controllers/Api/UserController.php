@@ -123,7 +123,7 @@ class UserController extends BaseApiController
     }
 
     /**
-     * Submit eKYC documents (for instructors)
+     * Submit eKYC documents (for teachers)
      *
      * @param Request $request
      * @return JsonResponse
@@ -132,47 +132,85 @@ class UserController extends BaseApiController
     {
         $user = $request->user();
 
-        if ($user->role !== 'instructor') {
-            return $this->sendError('Only instructors can submit eKYC documents', [], 403);
+        // Chỉ cho phép giáo viên xác thực eKYC
+        if ($user->role !== 'teacher') {
+            return $this->sendError('Chỉ giáo viên mới được xác thực eKYC', [], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'document_type' => 'required|in:passport,national_id,driver_license',
+            'document_type'   => 'required|in:passport,national_id,driver_license',
             'document_number' => 'required|string|max:50',
-            'document_front' => 'required|image|mimes:jpeg,png,jpg|max:5120',
-            'document_back' => 'sometimes|image|mimes:jpeg,png,jpg|max:5120',
-            'selfie' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'document_front'  => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'document_back'   => 'sometimes|image|mimes:jpeg,png,jpg|max:5120',
+            'selfie'          => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
-
         if ($validator->fails()) {
             return $this->sendError('Validation Error', $validator->errors()->toArray(), 422);
         }
 
-        // Store documents
+        // Lưu file vào storage
         $frontPath = $request->file('document_front')->store('ekyc/documents', 'public');
         $selfiePath = $request->file('selfie')->store('ekyc/selfies', 'public');
+        $backPath = $request->hasFile('document_back')
+            ? $request->file('document_back')->store('ekyc/documents', 'public')
+            : null;
 
-        $backPath = null;
-        if ($request->hasFile('document_back')) {
-            $backPath = $request->file('document_back')->store('ekyc/documents', 'public');
-        }
-
-        // Update user eKYC status
+        // Lưu thông tin vào trường json 'ekyc_data'
         $user->update([
             'ekyc_status' => 'pending',
-            'ekyc_data' => json_encode([
+            'ekyc_data' => [
                 'document_type' => $request->document_type,
                 'document_number' => $request->document_number,
                 'document_front_path' => $frontPath,
                 'document_back_path' => $backPath,
                 'selfie_path' => $selfiePath,
                 'submitted_at' => now(),
-            ])
+            ]
         ]);
 
         return $this->sendResponse([
             'ekyc_status' => $user->ekyc_status,
-        ], 'eKYC documents submitted successfully. Please wait for verification.');
+            'ekyc_data' => $user->ekyc_data,
+        ], 'Đã gửi hồ sơ eKYC, vui lòng chờ duyệt.');
+    }
+
+    /**
+     * Update user's eKYC status (Admin only)
+     *
+     * @param Request $request
+     * @param User $user
+     * @return JsonResponse
+     */
+    public function updateEkycStatus(Request $request, User $user): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:verified,rejected',
+            'reason' => 'required_if:status,rejected|string|max:500',
+        ]);
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error', $validator->errors()->toArray(), 422);
+        }
+
+        // Cập nhật trạng thái eKYC
+        $updateData = ['ekyc_status' => $request->status];
+
+        // Nếu từ chối, lưu lý do vào ekyc_data
+        if ($request->status === 'rejected' && $request->reason) {
+            $ekycData = $user->ekyc_data ?? [];
+            $ekycData['rejection_reason'] = $request->reason;
+            $ekycData['rejected_at'] = now();
+            $updateData['ekyc_data'] = $ekycData;
+        }
+
+        $user->update($updateData);
+
+        // TODO: Gửi notification/email cho user
+
+        return $this->sendResponse([
+            'id' => $user->id,
+            'name' => $user->name,
+            'ekyc_status' => $user->ekyc_status,
+        ], 'Đã cập nhật trạng thái eKYC thành công.');
     }
 
     /**

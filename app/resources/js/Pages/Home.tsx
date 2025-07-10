@@ -151,7 +151,7 @@ export default function Home() {
                         {t('home.categories.title')}
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                        {categories.map((category, index) => {
+                        {(Array.isArray(categories) ? categories : []).map((category, index) => {
                             const Icon = category.icon;
                             return (
                                 <div
@@ -222,7 +222,7 @@ export default function Home() {
                         {t('home.featured.title')}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {lessonCards.map((lesson) => (
+                        {(Array.isArray(lessonCards) ? lessonCards : []).map((lesson) => (
                             <div
                                 key={lesson.id}
                                 className="bg-white rounded-xl border border-[#E9ECEF] overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
@@ -266,7 +266,7 @@ export default function Home() {
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                        {lesson.tags.map((tag, index) => (
+                                        {(Array.isArray(lesson.tags) ? lesson.tags : []).map((tag, index) => (
                                             <span
                                                 key={index}
                                                 className="px-3 py-1 bg-[#F8F9FA] text-[#6C757D] text-xs rounded-full"

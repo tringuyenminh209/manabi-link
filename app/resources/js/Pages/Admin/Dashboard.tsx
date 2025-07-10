@@ -40,9 +40,9 @@ import {
     X,
 } from 'lucide-react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardBody } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/Components/Button';
+import { Card, CardHeader, CardBody } from '@/Components/Card';
+import { Badge } from '@/Components/Badge';
 
 type ActiveSection = 'overview' | 'users' | 'courses' | 'finance' | 'categories' | 'settings';
 type CourseTab = 'pending' | 'active' | 'rejected' | 'reported' | 'all';

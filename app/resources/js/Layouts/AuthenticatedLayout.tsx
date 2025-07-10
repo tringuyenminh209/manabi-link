@@ -136,19 +136,19 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                             <div className="px-4 py-3 border-b border-light-border">
                                                 <p className="text-sm font-medium text-charcoal-gray">{user?.name || 'User'}</p>
                                                 <p className="text-xs text-silver-gray">{user?.email || 'user@example.com'}</p>
-                                            </div>
+                        </div>
 
                                             {/* Menu Items */}
                                             {userMenuItems.map((item) => (
                                                 <HeadlessMenu.Item key={item.name}>
                                                     {({ active }) => (
                                                         item.action === 'logout' ? (
-                                                            <button
+                            <button
                                                                 onClick={handleLogout}
                                                                 className={`${
                                                                     active ? 'bg-off-white' : ''
                                                                 } group flex w-full items-center px-4 py-2 text-sm text-warning-red hover:bg-off-white transition-colors`}
-                                                            >
+                            >
                                                                 <LogOut className="mr-3 h-5 w-5" />
                                                                 {item.name}
                                                             </button>
@@ -229,7 +229,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                         </Link>
                                     )
                                 ))}
-                            </div>
+                </div>
 
                             {/* Mobile Search */}
                             <div className="mt-4 px-4">
@@ -240,12 +240,12 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                         placeholder="Tìm kiếm khóa học..."
                                         className="w-full pl-10 pr-4 py-2 border border-input-border rounded-lg text-sm focus:outline-none focus:border-wisdom-blue"
                                     />
-                                </div>
-                            </div>
+                    </div>
+                        </div>
                         </div>
                     )}
                 </div>
-            </header>
+                </header>
 
             {/* Main Content */}
             <main className="flex-1">

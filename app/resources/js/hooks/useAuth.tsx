@@ -7,6 +7,8 @@ interface User {
     name: string;
     email: string;
     role: string;
+    ekyc_status?: 'not_verified' | 'pending' | 'verified' | 'rejected';
+    avatar_path?: string;
     // Thêm các field khác nếu có
 }
 
@@ -40,27 +42,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
             const token = localStorage.getItem('auth_token');
             if (token) {
+                // Thử lấy user từ localStorage trước
+                const savedUser = localStorage.getItem('auth_user');
+                if (savedUser) {
+                    setUser(JSON.parse(savedUser));
+                }
+
+                // Sau đó gọi API để lấy thông tin mới nhất
                 const userData = await authAPI.me();
                 setUser(userData);
+                localStorage.setItem('auth_user', JSON.stringify(userData));
             }
         } catch (error) {
             console.error('Auth check failed:', error);
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
         } finally {
             setLoading(false);
-        }
-    };
-
-    // Đăng nhập
-    const login = async (credentials: { email: string; password: string }) => {
-        try {
-            setError(null);
-            const response = await authAPI.login(credentials);
-            setUser(response.user);
-            return response;
-        } catch (error: any) {
-            setError(error.response?.data?.message || 'Đăng nhập thất bại');
-            throw error;
         }
     };
 
@@ -69,12 +67,58 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
             setError(null);
             const response = await authAPI.register(userData);
-            if (response.token) {
-                setUser(response.user);
+            if (response.data && response.data.access_token) {
+                setUser(response.data.user);
+                // Redirect sau khi đăng ký thành công
+                window.location.href = '/login-complete';
             }
             return response;
         } catch (error: any) {
-            setError(error.response?.data?.message || 'Đăng ký thất bại');
+            setError(error.message || 'Đăng ký thất bại');
+            throw error;
+        }
+    };
+
+    // Đăng nhập
+    const login = async (credentials: { email: string; password: string }) => {
+        try {
+            console.log('🔐 Starting login with:', credentials.email);
+            setError(null);
+            const response = await authAPI.login(credentials);
+            console.log('📡 API response:', response);
+
+            if (response.data && response.data.user) {
+                console.log('✅ Login successful, user:', response.data.user);
+                console.log('🔑 Access token:', response.data.access_token);
+
+                // Lưu cả user và token vào localStorage
+                setUser(response.data.user);
+                localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+                localStorage.setItem('auth_token', response.data.access_token);
+
+                console.log('💾 Saved to localStorage:');
+                console.log('  - auth_user:', localStorage.getItem('auth_user'));
+                console.log('  - auth_token:', localStorage.getItem('auth_token'));
+
+                // Redirect dựa trên role
+                const userRole = response.data.user.role;
+                console.log('🔄 User role:', userRole);
+
+                // Redirect về home để HomeWrapper render HomeAuthenticated
+                console.log('✅ Login successful, redirecting to home');
+                console.log('🏠 HomeWrapper will render HomeAuthenticated with AuthenticatedLayout');
+                window.location.href = '/';
+
+            } else {
+                console.error('❌ No user data in response:', response);
+                alert('❌ Lỗi: Không có dữ liệu user trong response');
+                setError('Phản hồi từ server không hợp lệ');
+            }
+            return response;
+        } catch (error: any) {
+            console.error('💥 Login error:', error);
+            alert('💥 Lỗi đăng nhập: ' + error.message);
+            setError(error.message || 'Đăng nhập thất bại');
             throw error;
         }
     };
@@ -88,6 +132,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } finally {
             setUser(null);
             setError(null);
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('auth_token');
+            // Redirect về trang chủ sau khi đăng xuất
+            window.location.href = '/';
         }
     };
 

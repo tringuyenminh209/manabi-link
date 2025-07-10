@@ -18,21 +18,21 @@ import VerifyEmailPage from './Pages/Auth/VerifyEmail';
 import LoginCompletePage from './Pages/Auth/LoginComplete';
 import UnauthorizedPage from './Pages/Unauthorized';
 
-// Import các page cho người dùng đã đăng nhập (comment tạm thời)
-// import DashboardPage from './Pages/Learner/Dashboard';
-// import MyBookingsPage from './Pages/Learner/MyBookings';
-// import LearnerSettingsPage from './Pages/Learner/settings/LearnerSettings';
+// Import các page cho người dùng đã đăng nhập
+import DashboardPage from './Pages/Learner/Dashboard';
+import MyBookingsPage from './Pages/Learner/MyBookings';
+import LearnerSettingsPage from './Pages/Learner/settings/LearnerSettings';
 
-// Import các page cho giáo viên (comment tạm thời)
-// import TeacherDashboardPage from './Pages/Sensei/teacher-dashboard/Dashboard';
+// Import các page cho giáo viên
+import TeacherDashboardPage from './Pages/Sensei/teacher-dashboard/Dashboard';
 // import MyLessonsPage from './Pages/Sensei/teacher-dashboard/lessons/MyLessons';
-// import TeacherSchedulePage from './Pages/Sensei/schedule/Senseischedule';
+// import TeacherSchedulePage from './Pages/Sensei/teacher-dashboard/schedule/Senseischedule';
 // import TeacherProfilePage from './Pages/Sensei/profile/SenseiProfile';
 // import PayoutsPage from './Pages/Sensei/Payouts';
 
-// Import các page cho admin (comment tạm thời)
-// import AdminDashboardPage from './Pages/Admin/Dashboard';
-// import UserManagementPage from './Pages/Admin/user/UserManagement';
+// Import các page cho admin
+import AdminDashboardPage from './Pages/Admin/Dashboard';
+import UserManagementPage from './Pages/Admin/user/UserManagement';
 // import CategoryManagementPage from './Pages/Admin/category/category';
 // import CourseManagementPage from './Pages/Admin/course/course';
 // import FinancePage from './Pages/Admin/finance/finace';
@@ -93,48 +93,39 @@ root.render(
 
                 {/* Protected Routes - Cần đăng nhập */}
 
-                {/* Learner Routes (tạm thời redirect) */}
+                {/* Learner Routes */}
                 <Route path="/dashboard" element={
                     <ProtectedRoute>
-                        <div className="flex items-center justify-center min-h-screen">
-                            <div className="text-center">
-                                <h1 className="text-2xl font-bold text-charcoal-gray mb-4">Dashboard</h1>
-                                <p className="text-silver-gray mb-8">Trang dashboard đang được phát triển</p>
-                                <Link to="/" className="manabi-btn-primary">
-                                    Về trang chủ
-                                </Link>
-                            </div>
-                        </div>
+                        <DashboardPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/my-bookings" element={
+                    <ProtectedRoute>
+                        <MyBookingsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/learner/settings" element={
+                    <ProtectedRoute>
+                        <LearnerSettingsPage />
                     </ProtectedRoute>
                 } />
 
-                {/* Teacher Routes (tạm thời redirect) */}
-                <Route path="/teacher/*" element={
+                {/* Teacher Routes */}
+                <Route path="/teacher" element={
                     <ProtectedRoute roles={['teacher']}>
-                        <div className="flex items-center justify-center min-h-screen">
-                            <div className="text-center">
-                                <h1 className="text-2xl font-bold text-charcoal-gray mb-4">Teacher Dashboard</h1>
-                                <p className="text-silver-gray mb-8">Trang giáo viên đang được phát triển</p>
-                                <Link to="/" className="manabi-btn-primary">
-                                    Về trang chủ
-                                </Link>
-                            </div>
-                        </div>
+                        <TeacherDashboardPage />
                     </ProtectedRoute>
                 } />
 
-                {/* Admin Routes (tạm thời redirect) */}
-                <Route path="/admin/*" element={
+                {/* Admin Routes */}
+                <Route path="/admin" element={
                     <ProtectedRoute roles={['admin']}>
-                        <div className="flex items-center justify-center min-h-screen">
-                            <div className="text-center">
-                                <h1 className="text-2xl font-bold text-charcoal-gray mb-4">Admin Dashboard</h1>
-                                <p className="text-silver-gray mb-8">Trang admin đang được phát triển</p>
-                                <Link to="/" className="manabi-btn-primary">
-                                    Về trang chủ
-                                </Link>
-                            </div>
-                        </div>
+                        <AdminDashboardPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/admin/user" element={
+                    <ProtectedRoute roles={['admin']}>
+                        <UserManagementPage />
                     </ProtectedRoute>
                 } />
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, User, Phone, Calendar, MapPin } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Phone, Calendar, MapPin, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n';
 import { Link } from 'react-router-dom';
@@ -12,7 +12,9 @@ interface FormData {
     email: string;
     phone: string;
     dateOfBirth: string;
+    country: string;
     location: string;
+    address: string;
     password: string;
     confirmPassword: string;
     userType: 'learner' | 'teacher';
@@ -30,6 +32,248 @@ interface FormErrors {
     [key: string]: string | undefined;
 }
 
+// Danh sách quốc gia với addressPlaceholderKey
+const countries = [
+    { code: 'VN', nameKey: 'register_page.country_vn', addressPlaceholderKey: 'register_page.address_placeholder_vn' },
+    { code: 'JP', nameKey: 'register_page.country_jp', addressPlaceholderKey: 'register_page.address_placeholder_jp' },
+    { code: 'US', nameKey: 'register_page.country_us', addressPlaceholderKey: 'register_page.address_placeholder_us' },
+    { code: 'KR', nameKey: 'register_page.country_kr', addressPlaceholderKey: 'register_page.address_placeholder_kr' },
+    { code: 'CN', nameKey: 'register_page.country_cn', addressPlaceholderKey: 'register_page.address_placeholder_cn' },
+    { code: 'TH', nameKey: 'register_page.country_th', addressPlaceholderKey: 'register_page.address_placeholder_th' },
+    { code: 'SG', nameKey: 'register_page.country_sg', addressPlaceholderKey: 'register_page.address_placeholder_sg' },
+    { code: 'MY', nameKey: 'register_page.country_my', addressPlaceholderKey: 'register_page.address_placeholder_my' },
+    { code: 'ID', nameKey: 'register_page.country_id', addressPlaceholderKey: 'register_page.address_placeholder_id' },
+    { code: 'PH', nameKey: 'register_page.country_ph', addressPlaceholderKey: 'register_page.address_placeholder_ph' },
+    { code: 'AU', nameKey: 'register_page.country_au', addressPlaceholderKey: 'register_page.address_placeholder_au' },
+    { code: 'CA', nameKey: 'register_page.country_ca', addressPlaceholderKey: 'register_page.address_placeholder_ca' },
+    { code: 'GB', nameKey: 'register_page.country_gb', addressPlaceholderKey: 'register_page.address_placeholder_gb' },
+    { code: 'DE', nameKey: 'register_page.country_de', addressPlaceholderKey: 'register_page.address_placeholder_de' },
+    { code: 'FR', nameKey: 'register_page.country_fr', addressPlaceholderKey: 'register_page.address_placeholder_fr' },
+    { code: 'IT', nameKey: 'register_page.country_it', addressPlaceholderKey: 'register_page.address_placeholder_it' },
+    { code: 'ES', nameKey: 'register_page.country_es', addressPlaceholderKey: 'register_page.address_placeholder_es' },
+    { code: 'NL', nameKey: 'register_page.country_nl', addressPlaceholderKey: 'register_page.address_placeholder_nl' },
+    { code: 'SE', nameKey: 'register_page.country_se', addressPlaceholderKey: 'register_page.address_placeholder_se' },
+    { code: 'NO', nameKey: 'register_page.country_no', addressPlaceholderKey: 'register_page.address_placeholder_no' },
+    { code: 'DK', nameKey: 'register_page.country_dk', addressPlaceholderKey: 'register_page.address_placeholder_dk' },
+    { code: 'FI', nameKey: 'register_page.country_fi', addressPlaceholderKey: 'register_page.address_placeholder_fi' },
+    { code: 'CH', nameKey: 'register_page.country_ch', addressPlaceholderKey: 'register_page.address_placeholder_ch' },
+    { code: 'AT', nameKey: 'register_page.country_at', addressPlaceholderKey: 'register_page.address_placeholder_at' },
+    { code: 'BE', nameKey: 'register_page.country_be', addressPlaceholderKey: 'register_page.address_placeholder_be' },
+    { code: 'IE', nameKey: 'register_page.country_ie', addressPlaceholderKey: 'register_page.address_placeholder_ie' },
+    { code: 'PT', nameKey: 'register_page.country_pt', addressPlaceholderKey: 'register_page.address_placeholder_pt' },
+    { code: 'GR', nameKey: 'register_page.country_gr', addressPlaceholderKey: 'register_page.address_placeholder_gr' },
+    { code: 'PL', nameKey: 'register_page.country_pl', addressPlaceholderKey: 'register_page.address_placeholder_pl' },
+    { code: 'CZ', nameKey: 'register_page.country_cz', addressPlaceholderKey: 'register_page.address_placeholder_cz' },
+    { code: 'HU', nameKey: 'register_page.country_hu', addressPlaceholderKey: 'register_page.address_placeholder_hu' },
+    { code: 'RO', nameKey: 'register_page.country_ro', addressPlaceholderKey: 'register_page.address_placeholder_ro' },
+    { code: 'BG', nameKey: 'register_page.country_bg', addressPlaceholderKey: 'register_page.address_placeholder_bg' },
+    { code: 'HR', nameKey: 'register_page.country_hr', addressPlaceholderKey: 'register_page.address_placeholder_hr' },
+    { code: 'SI', nameKey: 'register_page.country_si', addressPlaceholderKey: 'register_page.address_placeholder_si' },
+    { code: 'SK', nameKey: 'register_page.country_sk', addressPlaceholderKey: 'register_page.address_placeholder_sk' },
+    { code: 'LT', nameKey: 'register_page.country_lt', addressPlaceholderKey: 'register_page.address_placeholder_lt' },
+    { code: 'LV', nameKey: 'register_page.country_lv', addressPlaceholderKey: 'register_page.address_placeholder_lv' },
+    { code: 'EE', nameKey: 'register_page.country_ee', addressPlaceholderKey: 'register_page.address_placeholder_ee' },
+    { code: 'MT', nameKey: 'register_page.country_mt', addressPlaceholderKey: 'register_page.address_placeholder_mt' },
+    { code: 'CY', nameKey: 'register_page.country_cy', addressPlaceholderKey: 'register_page.address_placeholder_cy' },
+    { code: 'LU', nameKey: 'register_page.country_lu', addressPlaceholderKey: 'register_page.address_placeholder_lu' },
+    { code: 'IS', nameKey: 'register_page.country_is', addressPlaceholderKey: 'register_page.address_placeholder_is' },
+    { code: 'AD', nameKey: 'register_page.country_ad', addressPlaceholderKey: 'register_page.address_placeholder_ad' },
+    { code: 'MC', nameKey: 'register_page.country_mc', addressPlaceholderKey: 'register_page.address_placeholder_mc' },
+    { code: 'LI', nameKey: 'register_page.country_li', addressPlaceholderKey: 'register_page.address_placeholder_li' },
+    { code: 'SM', nameKey: 'register_page.country_sm', addressPlaceholderKey: 'register_page.address_placeholder_sm' },
+    { code: 'VA', nameKey: 'register_page.country_va', addressPlaceholderKey: 'register_page.address_placeholder_va' },
+    { code: 'OTHER', nameKey: 'register_page.country_other', addressPlaceholderKey: 'register_page.address_placeholder' },
+];
+
+// Danh sách location theo quốc gia
+const locationsByCountry = {
+    VN: [
+        { code: 'hanoi', name: 'Hà Nội' },
+        { code: 'hcm', name: 'TP. Hồ Chí Minh' },
+        { code: 'danang', name: 'Đà Nẵng' },
+        { code: 'haiphong', name: 'Hải Phòng' },
+        { code: 'cantho', name: 'Cần Thơ' },
+        { code: 'binhduong', name: 'Bình Dương' },
+        { code: 'dongnai', name: 'Đồng Nai' },
+        { code: 'longan', name: 'Long An' },
+        { code: 'quangnam', name: 'Quảng Nam' },
+        { code: 'baia-vungtau', name: 'Bà Rịa - Vũng Tàu' },
+        { code: 'other', name: 'Khác' },
+    ],
+    JP: [
+        { code: 'tokyo', name: 'Tokyo (東京都)' },
+        { code: 'osaka', name: 'Osaka (大阪府)' },
+        { code: 'kyoto', name: 'Kyoto (京都府)' },
+        { code: 'yokohama', name: 'Yokohama (横浜市)' },
+        { code: 'nagoya', name: 'Nagoya (名古屋市)' },
+        { code: 'sapporo', name: 'Sapporo (札幌市)' },
+        { code: 'kobe', name: 'Kobe (神戸市)' },
+        { code: 'fukuoka', name: 'Fukuoka (福岡市)' },
+        { code: 'kawasaki', name: 'Kawasaki (川崎市)' },
+        { code: 'saitama', name: 'Saitama (さいたま市)' },
+        { code: 'hiroshima', name: 'Hiroshima (広島市)' },
+        { code: 'sendai', name: 'Sendai (仙台市)' },
+        { code: 'chiba', name: 'Chiba (千葉市)' },
+        { code: 'other', name: 'その他' },
+    ],
+    US: [
+        { code: 'california', name: 'California' },
+        { code: 'texas', name: 'Texas' },
+        { code: 'florida', name: 'Florida' },
+        { code: 'newyork', name: 'New York' },
+        { code: 'illinois', name: 'Illinois' },
+        { code: 'pennsylvania', name: 'Pennsylvania' },
+        { code: 'ohio', name: 'Ohio' },
+        { code: 'georgia', name: 'Georgia' },
+        { code: 'northcarolina', name: 'North Carolina' },
+        { code: 'michigan', name: 'Michigan' },
+        { code: 'newjersey', name: 'New Jersey' },
+        { code: 'virginia', name: 'Virginia' },
+        { code: 'washington', name: 'Washington' },
+        { code: 'arizona', name: 'Arizona' },
+        { code: 'massachusetts', name: 'Massachusetts' },
+        { code: 'other', name: 'Other' },
+    ],
+    KR: [
+        { code: 'seoul', name: 'Seoul (서울특별시)' },
+        { code: 'busan', name: 'Busan (부산광역시)' },
+        { code: 'incheon', name: 'Incheon (인천광역시)' },
+        { code: 'daegu', name: 'Daegu (대구광역시)' },
+        { code: 'daejeon', name: 'Daejeon (대전광역시)' },
+        { code: 'gwangju', name: 'Gwangju (광주광역시)' },
+        { code: 'suwon', name: 'Suwon (수원시)' },
+        { code: 'ulsan', name: 'Ulsan (울산광역시)' },
+        { code: 'changwon', name: 'Changwon (창원시)' },
+        { code: 'seongnam', name: 'Seongnam (성남시)' },
+        { code: 'bucheon', name: 'Bucheon (부천시)' },
+        { code: 'ansan', name: 'Ansan (안산시)' },
+        { code: 'jeonju', name: 'Jeonju (전주시)' },
+        { code: 'anyang', name: 'Anyang (안양시)' },
+        { code: 'other', name: '기타' },
+    ],
+    CN: [
+        { code: 'beijing', name: 'Beijing (北京市)' },
+        { code: 'shanghai', name: 'Shanghai (上海市)' },
+        { code: 'guangzhou', name: 'Guangzhou (广州市)' },
+        { code: 'shenzhen', name: 'Shenzhen (深圳市)' },
+        { code: 'tianjin', name: 'Tianjin (天津市)' },
+        { code: 'chongqing', name: 'Chongqing (重庆市)' },
+        { code: 'chengdu', name: 'Chengdu (成都市)' },
+        { code: 'hangzhou', name: 'Hangzhou (杭州市)' },
+        { code: 'wuhan', name: 'Wuhan (武汉市)' },
+        { code: 'xian', name: 'Xi\'an (西安市)' },
+        { code: 'nanjing', name: 'Nanjing (南京市)' },
+        { code: 'qingdao', name: 'Qingdao (青岛市)' },
+        { code: 'dalian', name: 'Dalian (大连市)' },
+        { code: 'suzhou', name: 'Suzhou (苏州市)' },
+        { code: 'other', name: '其他' },
+    ],
+    TH: [
+        { code: 'bangkok', name: 'Bangkok (กรุงเทพฯ)' },
+        { code: 'chiangmai', name: 'Chiang Mai (เชียงใหม่)' },
+        { code: 'pattaya', name: 'Pattaya (พัทยา)' },
+        { code: 'phuket', name: 'Phuket (ภูเก็ต)' },
+        { code: 'hatyai', name: 'Hat Yai (หาดใหญ่)' },
+        { code: 'nakhonratchasima', name: 'Nakhon Ratchasima (นครราชสีมา)' },
+        { code: 'udonthani', name: 'Udon Thani (อุดรธานี)' },
+        { code: 'khonkaen', name: 'Khon Kaen (ขอนแก่น)' },
+        { code: 'nakhonsi', name: 'Nakhon Si Thammarat (นครศรีธรรมราช)' },
+        { code: 'songkhla', name: 'Songkhla (สงขลา)' },
+        { code: 'other', name: 'อื่นๆ' },
+    ],
+    SG: [
+        { code: 'central', name: 'Central Region' },
+        { code: 'east', name: 'East Region' },
+        { code: 'north', name: 'North Region' },
+        { code: 'northeast', name: 'North-East Region' },
+        { code: 'west', name: 'West Region' },
+        { code: 'other', name: 'Other' },
+    ],
+    MY: [
+        { code: 'kualalumpur', name: 'Kuala Lumpur' },
+        { code: 'selangor', name: 'Selangor' },
+        { code: 'johor', name: 'Johor' },
+        { code: 'penang', name: 'Penang' },
+        { code: 'perak', name: 'Perak' },
+        { code: 'kedah', name: 'Kedah' },
+        { code: 'kelantan', name: 'Kelantan' },
+        { code: 'terengganu', name: 'Terengganu' },
+        { code: 'pahang', name: 'Pahang' },
+        { code: 'negerisembilan', name: 'Negeri Sembilan' },
+        { code: 'melaka', name: 'Melaka' },
+        { code: 'perlis', name: 'Perlis' },
+        { code: 'sabah', name: 'Sabah' },
+        { code: 'sarawak', name: 'Sarawak' },
+        { code: 'other', name: 'Other' },
+    ],
+    ID: [
+        { code: 'jakarta', name: 'Jakarta' },
+        { code: 'surabaya', name: 'Surabaya' },
+        { code: 'bandung', name: 'Bandung' },
+        { code: 'medan', name: 'Medan' },
+        { code: 'semarang', name: 'Semarang' },
+        { code: 'makassar', name: 'Makassar' },
+        { code: 'palembang', name: 'Palembang' },
+        { code: 'tangerang', name: 'Tangerang' },
+        { code: 'depok', name: 'Depok' },
+        { code: 'bekasi', name: 'Bekasi' },
+        { code: 'bogor', name: 'Bogor' },
+        { code: 'malang', name: 'Malang' },
+        { code: 'other', name: 'Lainnya' },
+    ],
+    PH: [
+        { code: 'manila', name: 'Manila' },
+        { code: 'quezoncity', name: 'Quezon City' },
+        { code: 'caloocan', name: 'Caloocan' },
+        { code: 'davaocity', name: 'Davao City' },
+        { code: 'cebucity', name: 'Cebu City' },
+        { code: 'antipolo', name: 'Antipolo' },
+        { code: 'pasig', name: 'Pasig' },
+        { code: 'taguig', name: 'Taguig' },
+        { code: 'valenzuela', name: 'Valenzuela' },
+        { code: 'cagayandeoro', name: 'Cagayan de Oro' },
+        { code: 'paranaque', name: 'Parañaque' },
+        { code: 'other', name: 'Other' },
+    ],
+    AU: [
+        { code: 'nsw', name: 'New South Wales' },
+        { code: 'vic', name: 'Victoria' },
+        { code: 'qld', name: 'Queensland' },
+        { code: 'wa', name: 'Western Australia' },
+        { code: 'sa', name: 'South Australia' },
+        { code: 'tas', name: 'Tasmania' },
+        { code: 'act', name: 'Australian Capital Territory' },
+        { code: 'nt', name: 'Northern Territory' },
+        { code: 'other', name: 'Other' },
+    ],
+    CA: [
+        { code: 'on', name: 'Ontario' },
+        { code: 'qc', name: 'Quebec' },
+        { code: 'bc', name: 'British Columbia' },
+        { code: 'ab', name: 'Alberta' },
+        { code: 'mb', name: 'Manitoba' },
+        { code: 'sk', name: 'Saskatchewan' },
+        { code: 'ns', name: 'Nova Scotia' },
+        { code: 'nb', name: 'New Brunswick' },
+        { code: 'nl', name: 'Newfoundland and Labrador' },
+        { code: 'pe', name: 'Prince Edward Island' },
+        { code: 'nt', name: 'Northwest Territories' },
+        { code: 'nu', name: 'Nunavut' },
+        { code: 'yt', name: 'Yukon' },
+        { code: 'other', name: 'Other' },
+    ],
+    GB: [
+        { code: 'england', name: 'England' },
+        { code: 'scotland', name: 'Scotland' },
+        { code: 'wales', name: 'Wales' },
+        { code: 'northernireland', name: 'Northern Ireland' },
+        { code: 'other', name: 'Other' },
+    ],
+    OTHER: [
+        { code: 'other', name: 'Other' },
+    ],
+};
+
 export default function RegisterPage() {
     const { register, error: authError, loading } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +284,9 @@ export default function RegisterPage() {
         email: '',
         phone: '',
         dateOfBirth: '',
+        country: '',
         location: '',
+        address: '',
         password: '',
         confirmPassword: '',
         userType: 'learner', // learner or teacher
@@ -48,12 +294,30 @@ export default function RegisterPage() {
         subscribeNewsletter: false,
     });
 
+    // Lấy placeholder địa chỉ theo quốc gia
+    const getAddressPlaceholder = () => {
+        const selectedCountry = countries.find(c => c.code === formData.country);
+        return selectedCountry
+            ? t(selectedCountry.addressPlaceholderKey)
+            : t('register_page.address_placeholder');
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-        }));
+
+        // Nếu thay đổi country, reset location
+        if (name === 'country') {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+                location: '', // Reset location khi đổi quốc gia
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+            }));
+        }
 
         // Clear field error when user starts typing
         if (errors[name]) {
@@ -72,6 +336,10 @@ export default function RegisterPage() {
             newErrors.email = 'Email là bắt buộc';
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = 'Email không hợp lệ';
+        }
+
+        if (!formData.country) {
+            newErrors.country = 'Vui lòng chọn quốc gia';
         }
 
         if (!formData.password) {
@@ -103,7 +371,9 @@ export default function RegisterPage() {
                 email: formData.email,
                 phone: formData.phone,
                 date_of_birth: formData.dateOfBirth,
+                country: formData.country,
                 location: formData.location,
+                address: formData.address,
                 password: formData.password,
                 password_confirmation: formData.confirmPassword,
                 role: formData.userType,
@@ -438,51 +708,104 @@ export default function RegisterPage() {
                                 </div>
                             </div>
 
-                            {/* Location Field */}
-                            <div data-oid="l7cxsht">
+
+
+                            {/* Country and Location Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        htmlFor="country"
+                                        className="block text-sm font-medium text-charcoal-gray mb-2"
+                                    >
+                                        {t('register_page.country')}
+                                    </label>
+                                    <div className="relative">
+                                        <Globe
+                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-silver-gray w-5 h-5"
+                                        />
+
+                                        <select
+                                            id="country"
+                                            name="country"
+                                            value={formData.country}
+                                            onChange={handleInputChange}
+                                            className={`manabi-input pl-12 ${errors.country ? 'border-red-500' : ''}`}
+                                        >
+                                            <option value="">
+                                                {t('register_page.country_placeholder')}
+                                            </option>
+                                            {(Array.isArray(countries) ? countries : []).map((country) => {
+                                                const label = t(country.nameKey);
+                                                return (
+                                                    <option key={country.code} value={country.code}>
+                                                        {label === country.nameKey ? country.code : label}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                    </div>
+                                    {errors.country && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.country}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor="location"
+                                        className="block text-sm font-medium text-charcoal-gray mb-2"
+                                    >
+                                        {t('register_page.location')}
+                                    </label>
+                                    <div className="relative">
+                                        <MapPin
+                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-silver-gray w-5 h-5"
+                                        />
+
+                                        <select
+                                            id="location"
+                                            name="location"
+                                            value={formData.location}
+                                            onChange={handleInputChange}
+                                            className="manabi-input pl-12"
+                                            disabled={!formData.country}
+                                        >
+                                            <option value="">
+                                                {formData.country
+                                                    ? t('register_page.location_placeholder')
+                                                    : 'Vui lòng chọn quốc gia trước'
+                                                }
+                                            </option>
+                                            {formData.country && locationsByCountry[formData.country as keyof typeof locationsByCountry] && Array.isArray(locationsByCountry[formData.country as keyof typeof locationsByCountry]) && locationsByCountry[formData.country as keyof typeof locationsByCountry].map((loc) => (
+                                                <option key={loc.code} value={loc.code}>
+                                                    {loc.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Address Row */}
+                            <div>
                                 <label
-                                    htmlFor="location"
+                                    htmlFor="address"
                                     className="block text-sm font-medium text-charcoal-gray mb-2"
-                                    data-oid="_p_sia1"
                                 >
-                                    {t('register_page.location')}
+                                    {t('register_page.address')}
                                 </label>
-                                <div className="relative" data-oid="i4cji85">
+                                <div className="relative">
                                     <MapPin
                                         className="absolute left-3 top-1/2 transform -translate-y-1/2 text-silver-gray w-5 h-5"
-                                        data-oid="li5c5k1"
                                     />
 
-                                    <select
-                                        id="location"
-                                        name="location"
-                                        value={formData.location}
+                                    <input
+                                        id="address"
+                                        name="address"
+                                        type="text"
+                                        value={formData.address}
                                         onChange={handleInputChange}
                                         className="manabi-input pl-12"
-                                        data-oid="q0pbo0d"
-                                    >
-                                        <option value="" data-oid="p4n8ve9">
-                                            {t('register_page.location_placeholder')}
-                                        </option>
-                                        <option value="hanoi" data-oid="y:sr4vz">
-                                            {t('register_page.location_hanoi')}
-                                        </option>
-                                        <option value="hcm" data-oid=":ec3:n5">
-                                            {t('register_page.location_hcm')}
-                                        </option>
-                                        <option value="danang" data-oid="mm:iw0t">
-                                            {t('register_page.location_danang')}
-                                        </option>
-                                        <option value="haiphong" data-oid="246awwt">
-                                            {t('register_page.location_haiphong')}
-                                        </option>
-                                        <option value="cantho" data-oid="zq-ow-i">
-                                            {t('register_page.location_cantho')}
-                                        </option>
-                                        <option value="other" data-oid="wox0oia">
-                                            {t('register_page.location_other')}
-                                        </option>
-                                    </select>
+                                        placeholder={getAddressPlaceholder()}
+                                    />
                                 </div>
                             </div>
 

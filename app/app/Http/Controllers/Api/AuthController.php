@@ -22,9 +22,15 @@ class AuthController extends BaseApiController
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date',
+            'country' => 'nullable|string|max:10',
+            'location' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:500',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:learner,instructor',
+            'role' => 'required|in:learner,teacher',
             'language_preference' => 'nullable|in:ja,vi,en',
+            'subscribe_newsletter' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -34,10 +40,15 @@ class AuthController extends BaseApiController
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
+            'date_of_birth' => $request->date_of_birth,
+            'country' => $request->country,
+            'location' => $request->location,
+            'address' => $request->address,
             'password' => Hash::make($request->password),
             'role' => $request->role,
             'language_preference' => $request->language_preference ?? 'ja',
-            'ekyc_status' => $request->role === 'instructor' ? 'pending' : 'not_required',
+            'ekyc_status' => 'not_verified',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

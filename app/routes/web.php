@@ -16,23 +16,25 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+// Route cho React SPA - tất cả sẽ được xử lý bởi React Router
+Route::get('/login', function () {
+    return view('app');
+})->name('login');
+
+Route::get('/register', function () {
+    return view('app');
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return view('app');
+});
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::get('/admin', function () {
+    return view('app');
+});
+
+Route::get('/teacher', function () {
+    return view('app');
 });
 
 require __DIR__.'/auth.php';

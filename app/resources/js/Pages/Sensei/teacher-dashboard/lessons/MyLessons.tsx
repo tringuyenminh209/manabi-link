@@ -20,9 +20,9 @@ import {
     Calendar,
 } from 'lucide-react';
 import { Menu, Transition } from '@headlessui/react';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardBody } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/Components/Button';
+import { Card, CardHeader, CardBody } from '@/Components/Card';
+import { Badge } from '@/Components/Badge';
 
 // --- Interfaces and Dummy Data ---
 interface Lesson {

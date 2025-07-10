@@ -35,6 +35,9 @@ export const authAPI = {
     register: async (userData) => {
         try {
             const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, userData);
+            if (response.data.access_token) {
+                localStorage.setItem('auth_token', response.data.access_token);
+            }
             return response.data;
         } catch (error) {
             throw new Error(formatErrorMessage(error));
@@ -44,12 +47,25 @@ export const authAPI = {
     // Đăng nhập
     login: async (credentials) => {
         try {
+            console.log('🌐 API login call with:', credentials);
+            console.log('🌐 API endpoint:', API_ENDPOINTS.AUTH.LOGIN);
+            console.log('🌐 Base URL:', API_CONFIG.BASE_URL);
+
             const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-            if (response.data.token) {
-                localStorage.setItem('auth_token', response.data.token);
+            console.log('🌐 Raw API response:', response);
+            console.log('🌐 Response data:', response.data);
+
+            if (response.data.access_token) {
+                console.log('🔑 Saving token to localStorage:', response.data.access_token);
+                localStorage.setItem('auth_token', response.data.access_token);
+            } else {
+                console.warn('⚠️ No access_token in response!');
             }
             return response.data;
         } catch (error) {
+            console.error('🌐 API login error:', error);
+            console.error('🌐 Error response:', error.response);
+            console.error('🌐 Error data:', error.response?.data);
             throw new Error(formatErrorMessage(error));
         }
     },
@@ -108,7 +124,11 @@ export const authAPI = {
     // Submit eKYC
     submitEkyc: async (ekycData) => {
         try {
-            const response = await apiClient.post(API_ENDPOINTS.USER.EKYC, ekycData);
+            const response = await apiClient.post(API_ENDPOINTS.USER.EKYC, ekycData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
             return response.data;
         } catch (error) {
             throw new Error(formatErrorMessage(error));
@@ -119,8 +139,8 @@ export const authAPI = {
     refreshToken: async () => {
         try {
             const response = await apiClient.post(API_ENDPOINTS.AUTH.REFRESH);
-            if (response.data.token) {
-                localStorage.setItem('auth_token', response.data.token);
+            if (response.data.access_token) {
+                localStorage.setItem('auth_token', response.data.access_token);
             }
             return response.data;
         } catch (error) {

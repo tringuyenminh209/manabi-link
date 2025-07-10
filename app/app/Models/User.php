@@ -21,11 +21,18 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'date_of_birth',
+        'country',
+        'location',
+        'address',
         'password',
         'role',
         'avatar_path',
         'bio',
         'ekyc_status',
+        'ekyc_data',
+        'language_preference',
     ];
 
     /**
@@ -46,6 +53,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'ekyc_data' => 'array',
     ];
 
     /**

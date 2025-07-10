@@ -1,9 +1,7 @@
 // Cấu hình API cho toàn bộ ứng dụng
 export const API_CONFIG = {
     // Base URL cho API
-    BASE_URL: process.env.NODE_ENV === 'production'
-        ? 'https://your-domain.com/api/v1'
-        : '/api/v1',
+    BASE_URL: 'http://localhost:8888/api/v1',
 
     // Timeout cho requests (ms)
     TIMEOUT: 10000,
