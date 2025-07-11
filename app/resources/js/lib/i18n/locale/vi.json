@@ -220,6 +220,68 @@
       "privacy": "Bảo mật",
       "follow_us": "Theo dõi chúng tôi",
       "copyright": "© 2024 Manabi Link. Tất cả quyền được bảo lưu."
+    },
+    "welcome": "Chào mừng trở lại, {{name}}!",
+    "today_is_great": "Hôm nay là một ngày tuyệt vời để học thêm điều gì đó mới",
+    "goals": {
+      "guitar": "Hoàn thành 2 bài học Guitar",
+      "vocab": "Luyện tập 50 từ vựng tiếng Nhật",
+      "cooking": "Thực hành nấu 1 món mới"
+    },
+    "stats": {
+      "courses": "Khóa học đã học",
+      "today_schedule": "Lịch học hôm nay",
+      "avg_score": "Điểm trung bình",
+      "progress": "Tiến độ học tập"
+    },
+    "recommend": {
+      "title": "Khóa học được đề xuất riêng cho bạn",
+      "see_all": "Xem tất cả",
+      "suggested": "Đề xuất cho bạn"
+    },
+    "categories": {
+      "title": "Khám phá theo sở thích của bạn",
+      "desc": "Dựa trên lịch sử học tập, chúng tôi đề xuất những danh mục phù hợp nhất với bạn",
+      "music": "Âm nhạc",
+      "languages": "Ngôn ngữ",
+      "cooking": "Nấu ăn",
+      "sports": "Thể thao",
+      "arts": "Nghệ thuật",
+      "technology": "Công nghệ",
+      "recommended": "Phù hợp với bạn"
+    },
+    "manage": {
+      "title": "Quản lý học tập của bạn",
+      "my_schedule": "Lịch học của tôi",
+      "my_schedule_desc": "Xem và quản lý lịch học",
+      "today_count": "3 lịch học hôm nay →",
+      "messages": "Tin nhắn",
+      "messages_desc": "Liên lạc với giáo viên",
+      "new_messages": "2 tin nhắn mới →",
+      "progress": "Tiến độ học tập",
+      "progress_desc": "Theo dõi kết quả học tập",
+      "progress_percent": "85% hoàn thành →",
+      "settings": "Cài đặt",
+      "settings_desc": "Quản lý tài khoản",
+      "profile_customize": "Tùy chỉnh profile →"
     }
+  },
+  "layout": {
+    "logo": "Manabi Link",
+    "subtitle": "Học tập trực tuyến",
+    "nav": {
+      "home": "Trang chủ",
+      "courses": "Khóa học",
+      "teachers": "Giảng viên",
+      "about": "Về chúng tôi",
+      "dashboard": "Dashboard",
+      "schedule": "Lịch học",
+      "settings": "Cài đặt"
+    },
+    "search_placeholder": "Tìm kiếm khóa học...",
+    "language": "Tiếng Việt",
+    "dashboard": "Dashboard",
+    "logout": "Đăng xuất",
+    "user": "Người dùng"
   }
 }

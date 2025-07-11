@@ -220,6 +220,68 @@
       "privacy": "プライバシー",
       "follow_us": "フォローする",
       "copyright": "© 2024 Manabi Link. All rights reserved."
+    },
+    "welcome": "おかえりなさい、{{name}}さん！",
+    "today_is_great": "今日は新しいことを学ぶのに最適な日です",
+    "goals": {
+      "guitar": "ギターレッスン2回完了",
+      "vocab": "日本語の単語50語を練習",
+      "cooking": "新しい料理を1品作る"
+    },
+    "stats": {
+      "courses": "完了したコース",
+      "today_schedule": "今日のスケジュール",
+      "avg_score": "平均スコア",
+      "progress": "学習進捗"
+    },
+    "recommend": {
+      "title": "あなたにおすすめのコース",
+      "see_all": "すべて見る",
+      "suggested": "あなたへのおすすめ"
+    },
+    "categories": {
+      "title": "興味で探す",
+      "desc": "学習履歴に基づいて、最適なカテゴリをおすすめします",
+      "music": "音楽",
+      "languages": "言語",
+      "cooking": "料理",
+      "sports": "スポーツ",
+      "arts": "アート",
+      "technology": "テクノロジー",
+      "recommended": "あなたにおすすめ"
+    },
+    "manage": {
+      "title": "学習管理",
+      "my_schedule": "マイスケジュール",
+      "my_schedule_desc": "スケジュールの確認・管理",
+      "today_count": "今日のスケジュール3件 →",
+      "messages": "メッセージ",
+      "messages_desc": "先生に連絡する",
+      "new_messages": "新着メッセージ2件 →",
+      "progress": "学習進捗",
+      "progress_desc": "学習成果を確認",
+      "progress_percent": "85%完了 →",
+      "settings": "設定",
+      "settings_desc": "アカウント管理",
+      "profile_customize": "プロフィールをカスタマイズ →"
     }
+  },
+  "layout": {
+    "logo": "Manabi Link",
+    "subtitle": "オンライン学習",
+    "nav": {
+      "home": "ホーム",
+      "courses": "コース",
+      "teachers": "講師",
+      "about": "私たちについて",
+      "dashboard": "ダッシュボード",
+      "schedule": "スケジュール",
+      "settings": "設定"
+    },
+    "search_placeholder": "コースを検索...",
+    "language": "日本語",
+    "dashboard": "ダッシュボード",
+    "logout": "ログアウト",
+    "user": "ユーザー"
   }
 }

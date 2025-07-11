@@ -1,11 +1,12 @@
 import './bootstrap';
 import '../css/app.css';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ProtectedRoute } from './Components/ProtectedRoute';
 import { GuestRoute } from './Components/GuestRoute';
 import PublicLayout from './Layouts/PublicLayout';
+import AuthenticatedLayout from './Layouts/AuthenticatedLayout';
 
 // Import các page chính
 import HomeWrapper from './Pages/HomeWrapper';
@@ -17,6 +18,7 @@ import ConfirmPasswordPage from './Pages/Auth/ConfirmPassword';
 import VerifyEmailPage from './Pages/Auth/VerifyEmail';
 import LoginCompletePage from './Pages/Auth/LoginComplete';
 import UnauthorizedPage from './Pages/Unauthorized';
+import HomeRoute from './Pages/HomeRoute';
 
 // Import các page cho người dùng đã đăng nhập
 import DashboardPage from './Pages/Learner/Dashboard';
@@ -44,12 +46,8 @@ root.render(
     <AuthProvider>
         <BrowserRouter>
             <Routes>
-                {/* Public Routes - Không cần đăng nhập */}
-                <Route path="/" element={
-                    <PublicLayout>
-                        <HomeWrapper />
-                    </PublicLayout>
-                } />
+                {/* Public & Authenticated Home Route */}
+                <Route path="/" element={<HomeRoute />} />
 
                 {/* Guest Routes - Chỉ cho người chưa đăng nhập */}
                 <Route path="/login" element={
@@ -92,42 +90,25 @@ root.render(
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
                 {/* Protected Routes - Cần đăng nhập */}
-
-                {/* Learner Routes */}
-                <Route path="/dashboard" element={
+                <Route element={
                     <ProtectedRoute>
-                        <DashboardPage />
+                        <AuthenticatedLayout>
+                            <Outlet />
+                        </AuthenticatedLayout>
                     </ProtectedRoute>
-                } />
-                <Route path="/my-bookings" element={
-                    <ProtectedRoute>
-                        <MyBookingsPage />
-                    </ProtectedRoute>
-                } />
-                <Route path="/learner/settings" element={
-                    <ProtectedRoute>
-                        <LearnerSettingsPage />
-                    </ProtectedRoute>
-                } />
+                }>
+                    {/* Learner Routes */}
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/my-bookings" element={<MyBookingsPage />} />
+                    <Route path="/learner/settings" element={<LearnerSettingsPage />} />
 
-                {/* Teacher Routes */}
-                <Route path="/teacher" element={
-                    <ProtectedRoute roles={['teacher']}>
-                        <TeacherDashboardPage />
-                    </ProtectedRoute>
-                } />
+                    {/* Teacher Routes */}
+                    <Route path="/teacher" element={<TeacherDashboardPage />} />
 
-                {/* Admin Routes */}
-                <Route path="/admin" element={
-                    <ProtectedRoute roles={['admin']}>
-                        <AdminDashboardPage />
-                    </ProtectedRoute>
-                } />
-                <Route path="/admin/user" element={
-                    <ProtectedRoute roles={['admin']}>
-                        <UserManagementPage />
-                    </ProtectedRoute>
-                } />
+                    {/* Admin Routes */}
+                    <Route path="/admin" element={<AdminDashboardPage />} />
+                    <Route path="/admin/user" element={<UserManagementPage />} />
+                </Route>
 
                 {/* Fallback route */}
                 <Route path="*" element={

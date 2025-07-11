@@ -6,9 +6,11 @@ import { lessonsAPI } from '@/api/lessons';
 import { useFetch } from '@/hooks/useFetch';
 import { useAuth } from '@/hooks/useAuth';
 import { t, getCurrentLocale, setLocale, SUPPORTED_LOCALES } from '@/lib/i18n';
+import { useLocale } from '@/lib/i18n/useLocale';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
+    useLocale(); // Đảm bảo re-render khi đổi ngôn ngữ
     const { user, isAuthenticated } = useAuth();
     const [selectedLanguage, setSelectedLanguage] = useState(getCurrentLocale());
     const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -60,7 +62,7 @@ export default function Home() {
         },
     ];
 
-    const lessonCards = featuredLessons || fallbackLessons;
+    const lessonCards = (featuredLessons && featuredLessons.length > 0) ? featuredLessons : fallbackLessons;
 
     const categories = [
         { name: t('home.categories.music'), icon: Music, count: '156' },

@@ -220,6 +220,68 @@
       "privacy": "Privacy",
       "follow_us": "Follow us",
       "copyright": "© 2024 Manabi Link. All rights reserved."
+    },
+    "welcome": "Welcome back, {{name}}!",
+    "today_is_great": "Today is a great day to learn something new",
+    "goals": {
+      "guitar": "Complete 2 Guitar lessons",
+      "vocab": "Practice 50 Japanese words",
+      "cooking": "Cook 1 new dish"
+    },
+    "stats": {
+      "courses": "Courses completed",
+      "today_schedule": "Today's schedule",
+      "avg_score": "Average score",
+      "progress": "Learning progress"
+    },
+    "recommend": {
+      "title": "Courses recommended just for you",
+      "see_all": "See all",
+      "suggested": "Suggested for you"
+    },
+    "categories": {
+      "title": "Explore by your interests",
+      "desc": "Based on your learning history, we recommend the most suitable categories for you",
+      "music": "Music",
+      "languages": "Languages",
+      "cooking": "Cooking",
+      "sports": "Sports",
+      "arts": "Arts",
+      "technology": "Technology",
+      "recommended": "Recommended for you"
+    },
+    "manage": {
+      "title": "Manage your learning",
+      "my_schedule": "My schedule",
+      "my_schedule_desc": "View and manage your schedule",
+      "today_count": "3 schedules today →",
+      "messages": "Messages",
+      "messages_desc": "Contact your teacher",
+      "new_messages": "2 new messages →",
+      "progress": "Learning progress",
+      "progress_desc": "Track your learning results",
+      "progress_percent": "85% completed →",
+      "settings": "Settings",
+      "settings_desc": "Manage your account",
+      "profile_customize": "Customize profile →"
     }
+  },
+  "layout": {
+    "logo": "Manabi Link",
+    "subtitle": "Online Learning",
+    "nav": {
+      "home": "Home",
+      "courses": "Courses",
+      "teachers": "Teachers",
+      "about": "About Us",
+      "dashboard": "Dashboard",
+      "schedule": "Schedule",
+      "settings": "Settings"
+    },
+    "search_placeholder": "Search courses...",
+    "language": "English",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "user": "User"
   }
 }

@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Bell, Search, Menu, X, Globe, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar } from 'lucide-react';
 import { Menu as HeadlessMenu, Transition } from '@headlessui/react';
 import { Button } from '@/Components/Button';
@@ -7,6 +7,7 @@ import { NotificationPopover } from '@/Components/NotificationPopover';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigation } from '@/hooks/useNavigation';
 import { Link } from 'react-router-dom';
+import { t, getCurrentLocale, setLocale, SUPPORTED_LOCALES } from '@/lib/i18n';
 
 interface AuthenticatedLayoutProps {
     children: React.ReactNode;
@@ -16,17 +17,31 @@ interface AuthenticatedLayoutProps {
 export default function AuthenticatedLayout({ children, className }: AuthenticatedLayoutProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [languageOpen, setLanguageOpen] = useState(false);
+    const [selectedLanguage, setSelectedLanguage] = useState(getCurrentLocale());
     const { user, isAuthenticated, logout } = useAuth();
     const { getCurrentNavigation, getUserMenuItems } = useNavigation();
+
+    useEffect(() => {
+        const handler = (e: any) => setSelectedLanguage(e.detail);
+        window.addEventListener('localeChanged', handler);
+        return () => window.removeEventListener('localeChanged', handler);
+    }, []);
 
     const navigation = getCurrentNavigation();
     const userMenuItems = getUserMenuItems();
 
     const languages = [
-        { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+        { code: 'vi', name: t('layout.language'), flag: '🇻🇳' },
         { code: 'en', name: 'English', flag: '🇺🇸' },
         { code: 'ja', name: '日本語', flag: '🇯🇵' },
     ];
+
+    // Handle language change
+    const handleLanguageChange = (locale: keyof typeof SUPPORTED_LOCALES) => {
+        setSelectedLanguage(locale);
+        setLocale(locale);
+        setLanguageOpen(false);
+    };
 
     const handleLogout = () => {
         logout();
@@ -45,8 +60,8 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                     <span className="text-white font-bold text-lg">M</span>
                                 </div>
                                 <div>
-                                    <h1 className="text-xl font-bold text-charcoal-gray">Manabi Link</h1>
-                                    <p className="text-xs text-silver-gray">Học tập trực tuyến</p>
+                                    <h1 className="text-xl font-bold text-charcoal-gray">{t('layout.logo')}</h1>
+                                    <p className="text-xs text-silver-gray">{t('layout.subtitle')}</p>
                                 </div>
                             </Link>
                         </div>
@@ -59,7 +74,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                     to={item.href}
                                     className="text-charcoal-gray hover:text-wisdom-blue font-medium transition-colors"
                                 >
-                                    {item.name}
+                                    {t(`layout.nav.${item.key || item.name.toLowerCase()}`) || item.name}
                                 </Link>
                             ))}
                         </nav>
@@ -71,7 +86,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                 <Search className="absolute left-3 w-4 h-4 text-silver-gray" />
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm khóa học..."
+                                    placeholder={t('layout.search_placeholder')}
                                     className="pl-10 pr-4 py-2 border border-input-border rounded-lg text-sm focus:outline-none focus:border-wisdom-blue"
                                 />
                             </div>
@@ -85,7 +100,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                     className="flex items-center space-x-2"
                                 >
                                     <Globe className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Tiếng Việt</span>
+                                    <span className="hidden sm:inline">{t('layout.language')}</span>
                                 </Button>
 
                                 {languageOpen && (
@@ -94,7 +109,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                             <button
                                                 key={lang.code}
                                                 className="w-full flex items-center space-x-3 px-4 py-2 text-left hover:bg-off-white transition-colors"
-                                                onClick={() => setLanguageOpen(false)}
+                                                onClick={() => handleLanguageChange(lang.code as keyof typeof SUPPORTED_LOCALES)}
                                             >
                                                 <span className="text-lg">{lang.flag}</span>
                                                 <span className="text-charcoal-gray">{lang.name}</span>
@@ -114,7 +129,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                         <User className="w-4 h-4 text-wisdom-blue" />
                                     </div>
                                     <span className="hidden sm:inline font-medium text-charcoal-gray">
-                                        {user?.name || 'User'}
+                                        {user?.name || t('layout.user')}
                                     </span>
                                     <svg className="w-4 h-4 text-silver-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -134,23 +149,23 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                         <div className="py-1">
                                             {/* User Info */}
                                             <div className="px-4 py-3 border-b border-light-border">
-                                                <p className="text-sm font-medium text-charcoal-gray">{user?.name || 'User'}</p>
+                                                <p className="text-sm font-medium text-charcoal-gray">{user?.name || t('layout.user')}</p>
                                                 <p className="text-xs text-silver-gray">{user?.email || 'user@example.com'}</p>
-                        </div>
+                                            </div>
 
                                             {/* Menu Items */}
                                             {userMenuItems.map((item) => (
                                                 <HeadlessMenu.Item key={item.name}>
                                                     {({ active }) => (
                                                         item.action === 'logout' ? (
-                            <button
+                                                            <button
                                                                 onClick={handleLogout}
                                                                 className={`${
                                                                     active ? 'bg-off-white' : ''
                                                                 } group flex w-full items-center px-4 py-2 text-sm text-warning-red hover:bg-off-white transition-colors`}
-                            >
+                                                            >
                                                                 <LogOut className="mr-3 h-5 w-5" />
-                                                                {item.name}
+                                                                {t('layout.logout')}
                                                             </button>
                                                         ) : (
                                                             <Link
@@ -159,7 +174,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                                                     active ? 'bg-off-white' : ''
                                                                 } group flex items-center px-4 py-2 text-sm text-charcoal-gray hover:bg-off-white transition-colors`}
                                                             >
-                                                                {item.name}
+                                                                {t(`layout.nav.${item.key || item.name.toLowerCase()}`) || item.name}
                                                             </Link>
                                                         )
                                                     )}
@@ -197,7 +212,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                         className="block px-4 py-2 text-charcoal-gray hover:text-wisdom-blue hover:bg-off-white rounded-lg transition-colors"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
-                                        {item.name}
+                                        {t(`layout.nav.${item.key || item.name.toLowerCase()}`) || item.name}
                                     </Link>
                                 ))}
                             </nav>
@@ -205,7 +220,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                             {/* Mobile User Menu */}
                             <div className="mt-4 border-t border-light-border pt-4">
                                 <div className="px-4 py-2">
-                                    <p className="text-sm font-medium text-charcoal-gray">{user?.name || 'User'}</p>
+                                    <p className="text-sm font-medium text-charcoal-gray">{user?.name || t('layout.user')}</p>
                                     <p className="text-xs text-silver-gray">{user?.email || 'user@example.com'}</p>
                                 </div>
                                 {userMenuItems.map((item) => (
@@ -216,7 +231,7 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                             className="flex items-center w-full px-4 py-2 text-warning-red hover:bg-off-white transition-colors"
                                         >
                                             <LogOut className="mr-3 h-5 w-5" />
-                                            {item.name}
+                                            {t('layout.logout')}
                                         </button>
                                     ) : (
                                         <Link
@@ -225,11 +240,11 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                             className="flex items-center px-4 py-2 text-charcoal-gray hover:text-wisdom-blue hover:bg-off-white transition-colors"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
-                                            {item.name}
+                                            {t(`layout.nav.${item.key || item.name.toLowerCase()}`) || item.name}
                                         </Link>
                                     )
                                 ))}
-                </div>
+                            </div>
 
                             {/* Mobile Search */}
                             <div className="mt-4 px-4">
@@ -237,15 +252,15 @@ export default function AuthenticatedLayout({ children, className }: Authenticat
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-silver-gray" />
                                     <input
                                         type="text"
-                                        placeholder="Tìm kiếm khóa học..."
+                                        placeholder={t('layout.search_placeholder')}
                                         className="w-full pl-10 pr-4 py-2 border border-input-border rounded-lg text-sm focus:outline-none focus:border-wisdom-blue"
                                     />
-                    </div>
-                        </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
-                </header>
+            </header>
 
             {/* Main Content */}
             <main className="flex-1">
